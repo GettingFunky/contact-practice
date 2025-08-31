@@ -6,6 +6,7 @@ use App\Models\Contact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Http\Requests\StoreContactRequest;
 
 class ContactController extends Controller
 {
@@ -13,24 +14,24 @@ class ContactController extends Controller
         return view('contact');
     }
 
-    public function store(Request $request): RedirectResponse {
-        $data = $request->validate([
-            'name'    => ['required','string','min:3'],
-            'email'   => ['required','email'],
-            'phone'   => ['nullable','string','max:30'],
-            'message' => ['required','string','min:10','max:1000'],
-        // Απλό honeypot: πρέπει να μείνει άδειο. Αν το γεμίσει bot → 422
-            'website' => ['nullable','prohibited'],
+       public function store(StoreContactRequest $request)
+    {
+        // 1) Validated & normalized data από το Form Request
+        $data = $request->validated();
+
+        // 2) Ασφάλεια: ποτέ μην περνάς whole $request->all() σε mass-assignment
+        //    Εδώ μόνο validated πεδία
+        Contact::create([
+            'name'    => $data['name'],
+            'email'   => $data['email'],
+            'phone'   => $data['phone'] ?? null,
+            'message' => $data['message'],
         ]);
 
-        // Δεν θέλουμε να αποθηκευτεί το honeypot στην DB
-        unset($data['website']);
-
-        // Δημιουργία εγγραφής (χρειάζεται $fillable στο Model)
-        Contact::create($data);
-
-        // PRG pattern: redirect back + flash μήνυμα
-        return back()->with('success', 'Ευχαριστούμε! Το μήνυμά σου καταχωρήθηκε.');
+        // 3) PRG + flash
+        return redirect()
+            ->route('contact.create')
+            ->with('success', 'Ευχαριστούμε! Λάβαμε το μήνυμά σου και θα επικοινωνήσουμε σύντομα.');
     }
 
     /**
