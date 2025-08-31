@@ -108,6 +108,7 @@
                                     </svg>
                                 </a>
                             </span>
+                            <a href="/contact">Send us a Message</a>
                         </li>
                     </ul>
                     <ul class="flex gap-3 text-sm leading-normal">
